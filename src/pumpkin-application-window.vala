@@ -11,12 +11,14 @@ namespace Pumpkin {
             GLib.Object(application: application);
 
             new_tab_button.clicked.connect(() => create_tab().load_uri("http://google.com"));
-            new_tab_button.show();
+            notebook.switch_page.connect((page) => {
+                Pumpkin.TabLabel label = (Pumpkin.TabLabel) notebook.get_tab_label(page);
+                title = label.text;
+                icon = label.icon;
+            });
 
             web_context = new WebKit.WebContext();
             web_context.set_favicon_database_directory(null);
-            
-            show_all();
 
             create_tab().load_uri("http://google.com");
         }
@@ -34,8 +36,8 @@ namespace Pumpkin {
                     context.clip_extents(null, null, out width, out height);
                     var pixbuf = Gdk.pixbuf_get_from_surface(favicon, 0, 0, (int) width, (int) height)
                         .scale_simple(ICON_SIZE, ICON_SIZE, Gdk.InterpType.BILINEAR);
-                    set_icon(pixbuf);
-                    label.set_icon(pixbuf);
+                    icon = pixbuf;
+                    label.icon = pixbuf;
                 }
             });
 
@@ -43,7 +45,7 @@ namespace Pumpkin {
 
             web_view.notify["title"].connect(() => {
                 title = web_view.title;
-                label.set_text(web_view.title);
+                label.text = web_view.title;
             });
 
             notebook.append_page(web_view, label);
@@ -55,8 +57,7 @@ namespace Pumpkin {
                 web_view.destroy();
             });
 
-            show_all();
-
+            web_view.show();
             notebook.set_current_page(notebook.page_num(web_view));
 
             return web_view;
