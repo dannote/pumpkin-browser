@@ -18,7 +18,7 @@ namespace Pumpkin {
         public ApplicationWindow(Gtk.Application application) {
             GLib.Object(application: application);
 
-            new_tab_button.clicked.connect(() => create_tab().load_uri("http://google.com"));
+            new_tab_button.clicked.connect(() => create_tab());
 
             back_button.clicked.connect(() => {
                 if (notebook.page >= 0) {
