@@ -18,7 +18,11 @@ namespace Pumpkin {
         public ApplicationWindow(Gtk.Application application) {
             GLib.Object(application: application);
 
-            new_tab_button.clicked.connect(() => create_tab().load_uri("about:blank"));
+            new_tab_button.clicked.connect(() => {
+                create_tab().load_uri("about:blank");
+                address_entry.grab_focus();
+                address_entry.select_region(0, -1);
+            });
 
             back_button.clicked.connect(() => {
                 if (notebook.page >= 0) {
