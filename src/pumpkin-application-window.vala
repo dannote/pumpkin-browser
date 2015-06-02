@@ -18,7 +18,7 @@ namespace Pumpkin {
         public ApplicationWindow(Gtk.Application application) {
             GLib.Object(application: application);
 
-            new_tab_button.clicked.connect(() => create_tab());
+            new_tab_button.clicked.connect(() => create_tab().load_uri("about:blank"));
 
             back_button.clicked.connect(() => {
                 if (notebook.page >= 0) {
@@ -59,9 +59,11 @@ namespace Pumpkin {
             });
             
             notebook.switch_page.connect((page) => {
+                WebKit.WebView web_view = (WebKit.WebView) page;
                 Pumpkin.TabLabel label = (Pumpkin.TabLabel) notebook.get_tab_label(page);
                 title = label.text;
                 icon = label.icon;
+                address_entry.text = web_view.uri == null ? "about:blank" : web_view.uri;
             });
 
             web_context = new WebKit.WebContext();
@@ -97,6 +99,12 @@ namespace Pumpkin {
                     title = web_view.title;
                 }
                 label.text = web_view.title;
+            });
+
+            web_view.notify["uri"].connect(() => {
+                if (notebook.page_num(web_view) == notebook.page) {
+                    address_entry.text = web_view.uri;
+                }
             });
 
             notebook.append_page(web_view, label);
