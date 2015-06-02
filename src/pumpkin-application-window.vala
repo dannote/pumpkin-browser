@@ -83,15 +83,19 @@ namespace Pumpkin {
                     context.clip_extents(null, null, out width, out height);
                     var pixbuf = Gdk.pixbuf_get_from_surface(favicon, 0, 0, (int) width, (int) height)
                         .scale_simple(ICON_SIZE, ICON_SIZE, Gdk.InterpType.BILINEAR);
-                    icon = pixbuf;
                     label.icon = pixbuf;
+                    if (notebook.page_num(web_view) == notebook.page) {
+                        icon = pixbuf;
+                    }
                 }
             });
 
             web_view.create.connect(create_tab);
 
             web_view.notify["title"].connect(() => {
-                title = web_view.title;
+                if (notebook.page_num(web_view) == notebook.page) {
+                    title = web_view.title;
+                }
                 label.text = web_view.title;
             });
 
