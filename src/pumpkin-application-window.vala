@@ -5,12 +5,59 @@ namespace Pumpkin {
         protected Gtk.Notebook notebook;
         [GtkChild]
         protected Gtk.Button new_tab_button;
+        [GtkChild]
+        protected Gtk.ToolButton back_button;
+        [GtkChild]
+        protected Gtk.ToolButton forward_button;
+        [GtkChild]
+        protected Gtk.ToolButton reload_button;
+        [GtkChild]
+        protected Gtk.Entry address_entry;
         protected WebKit.WebContext web_context;
 
         public ApplicationWindow(Gtk.Application application) {
             GLib.Object(application: application);
 
             new_tab_button.clicked.connect(() => create_tab().load_uri("http://google.com"));
+
+            back_button.clicked.connect(() => {
+                if (notebook.page >= 0) {
+                    WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
+                    web_view.go_back();
+                } 
+            });
+
+            forward_button.clicked.connect(() => {
+                if (notebook.page >= 0) {
+                    WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
+                    web_view.go_forward();
+                } 
+            });
+
+            reload_button.clicked.connect(() => {
+                if (notebook.page >= 0) {
+                    WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
+                    web_view.reload();
+                } 
+            });
+
+            address_entry.key_release_event.connect((event) => {
+                Gdk.EventKey event_key = (Gdk.EventKey) event;
+                if (event_key.keyval == Gdk.Key.Return && notebook.page >= 0) {
+                    WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
+                    var uri = new Soup.URI(address_entry.text);
+                    if (uri == null) {
+                        uri = new Soup.URI(null);
+                        uri.set_scheme("http");
+                        uri.set_host(address_entry.text);
+                        uri.set_path("");
+                    }
+                    web_view.load_uri(uri.to_string(false));
+                }
+                
+                return true;
+            });
+            
             notebook.switch_page.connect((page) => {
                 Pumpkin.TabLabel label = (Pumpkin.TabLabel) notebook.get_tab_label(page);
                 title = label.text;
@@ -58,6 +105,7 @@ namespace Pumpkin {
             });
 
             web_view.show();
+            web_view.grab_focus();
             notebook.set_current_page(notebook.page_num(web_view));
 
             return web_view;
