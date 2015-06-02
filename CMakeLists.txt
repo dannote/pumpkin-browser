@@ -57,8 +57,6 @@ VALA_PRECOMPILE(VALA_C ${PROJECT_NAME}
     src/pumpkin-application.vala
     src/pumpkin-application-window.vala
     src/pumpkin-tab-label.vala
-DIRECTORY
-    ${CMAKE_SOURCE_DIR}
 PACKAGES
     posix
     libnotify

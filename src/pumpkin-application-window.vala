@@ -18,7 +18,7 @@ namespace Pumpkin {
             
             show_all();
 
-            var web_view = create_tab().load_uri("http://google.com");
+            create_tab().load_uri("http://google.com");
         }
 
         public WebKit.WebView create_tab() {
