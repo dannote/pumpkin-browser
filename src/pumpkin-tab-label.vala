@@ -8,7 +8,10 @@ namespace Pumpkin {
         [GtkChild]
         protected Gtk.Button close_button;
 
+        public signal void close();
+
         public TabLabel() {
+            close_button.clicked.connect(() => close());
             show_all();
         }
 

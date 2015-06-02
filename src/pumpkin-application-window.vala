@@ -3,21 +3,28 @@ namespace Pumpkin {
     public class ApplicationWindow : Gtk.ApplicationWindow {
         [GtkChild]
         protected Gtk.Notebook notebook;
+        [GtkChild]
+        protected Gtk.Button new_tab_button;
         protected WebKit.WebContext web_context;
 
         public ApplicationWindow(Gtk.Application application) {
             GLib.Object(application: application);
 
-            var new_tab_button = new Gtk.Button.from_icon_name("tab-new", Gtk.IconSize.MENU);
+            new_tab_button.clicked.connect(() => create_tab().load_uri("http://google.com"));
             new_tab_button.show();
-            notebook.set_action_widget(new_tab_button, Gtk.PackType.END);
 
             web_context = new WebKit.WebContext();
             web_context.set_favicon_database_directory(null);
+            
+            show_all();
+
+            var web_view = create_tab().load_uri("http://google.com");
+        }
+
+        public WebKit.WebView create_tab() {
             var web_view = new WebKit.WebView.with_context(web_context);
 
             var label = new Pumpkin.TabLabel();
-            notebook.append_page(web_view, label);
 
             web_view.notify["favicon"].connect(() => {
                 if (web_view.favicon != null) {
@@ -32,21 +39,27 @@ namespace Pumpkin {
                 }
             });
 
-            web_view.create.connect(() => {
-                var web_view_new = new WebKit.WebView.with_context(web_context);
-                notebook.append_page(web_view_new, new Pumpkin.TabLabel());
-                show_all();
-                return web_view_new;
-            });
+            web_view.create.connect(create_tab);
 
             web_view.notify["title"].connect(() => {
                 title = web_view.title;
                 label.set_text(web_view.title);
             });
 
+            notebook.append_page(web_view, label);
+            notebook.set_tab_reorderable(web_view, true);
+
+            label.close.connect(() => {
+                notebook.remove_page(notebook.page_num(web_view));
+                label.destroy();
+                web_view.destroy();
+            });
+
             show_all();
 
-            web_view.load_uri("http://google.com");
+            notebook.set_current_page(notebook.page_num(web_view));
+
+            return web_view;
         }
     }
 }
