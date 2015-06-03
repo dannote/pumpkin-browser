@@ -113,6 +113,8 @@ namespace Pumpkin {
                 icon = label.icon;
                 address_entry.text = web_view.uri == null ? "" : web_view.uri;
                 address_entry.progress_fraction = web_view.is_loading ? web_view.estimated_load_progress : 0;
+                back_button.set_sensitive(web_view.can_go_back());
+                forward_button.set_sensitive(web_view.can_go_forward());
             });
 
             web_context = new WebKit.WebContext();
@@ -159,10 +161,12 @@ namespace Pumpkin {
             web_view.notify["estimated-load-progress"].connect(() => {
                 if (notebook.page_num(web_view) == notebook.page) {
                     address_entry.progress_fraction = web_view.estimated_load_progress;
+                    back_button.set_sensitive(web_view.can_go_back());
+                    forward_button.set_sensitive(web_view.can_go_forward());
                 }
             });
 
-            web_view.notify["is-loading"].connect(() => {
+            web_view.load_changed.connect(() => {
                 if (notebook.page_num(web_view) == notebook.page && !web_view.is_loading) {
                     address_entry.progress_fraction = 0;
                 }
