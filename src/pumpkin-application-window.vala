@@ -1,25 +1,20 @@
 namespace Pumpkin {
     [GtkTemplate(ui = "/net/dannote/pumpkin/ui/window.ui")]
     public class ApplicationWindow : Gtk.ApplicationWindow {
-        [GtkChild]
-        protected Gtk.Notebook notebook;
-        [GtkChild]
-        protected Gtk.Button new_tab_button;
-        [GtkChild]
-        protected Gtk.ToolButton back_button;
-        [GtkChild]
-        protected Gtk.ToolButton forward_button;
-        [GtkChild]
-        protected Gtk.ToolButton reload_button;
-        [GtkChild]
-        protected Gtk.Entry address_entry;
+        [GtkChild] protected Gtk.Notebook notebook;
+        [GtkChild] protected Gtk.Button new_tab_button;
+        [GtkChild] protected Gtk.ToolButton back_button;
+        [GtkChild] protected Gtk.ToolButton forward_button;
+        [GtkChild] protected Gtk.ToolButton reload_button;
+        [GtkChild] protected Gtk.Entry address_entry;
+        protected Gtk.EntryCompletion address_entry_completion;
         protected WebKit.WebContext web_context;
 
         public ApplicationWindow(Gtk.Application application) {
             GLib.Object(application: application);
 
             new_tab_button.clicked.connect(() => {
-                create_tab().load_uri("about:blank");
+                create_tab();
                 address_entry.grab_focus();
                 address_entry.select_region(0, -1);
             });
@@ -45,18 +40,47 @@ namespace Pumpkin {
                 } 
             });
 
+            address_entry_completion = new Gtk.EntryCompletion();
+            address_entry_completion.text_column = 0;
+            address_entry.completion = address_entry_completion;
+
             address_entry.key_release_event.connect((event) => {
                 Gdk.EventKey event_key = (Gdk.EventKey) event;
-                if (event_key.keyval == Gdk.Key.Return && notebook.page >= 0) {
-                    WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
-                    var uri = new Soup.URI(address_entry.text);
-                    if (uri == null) {
-                        uri = new Soup.URI(null);
-                        uri.set_scheme("http");
-                        uri.set_host(address_entry.text);
-                        uri.set_path("");
+                if (notebook.page >= 0) {
+                    if (event_key.keyval == Gdk.Key.Return) {
+                        WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
+                        var uri = new Soup.URI(address_entry.text);
+                        if (uri == null) {
+                            uri = new Soup.URI(null);
+                            uri.set_scheme("http");
+                            uri.set_host(address_entry.text);
+                            uri.set_path("");
+                        }
+                        web_view.grab_focus();
+                        web_view.load_uri(uri.to_string(false));
+                    } else if(event_key.keyval != Gdk.Key.Up && event_key.keyval != Gdk.Key.Down) {
+                        var session = new Soup.Session();
+                        var message = new Soup.Message("GET",
+                            "http://suggestqueries.google.com/complete/search?client=firefox&q=%s"
+                            .printf(Soup.URI.encode(address_entry.text, null)));
+                        session.queue_message(message, (session, message) => {
+                            try {
+                                var parser = new Json.Parser();
+                                parser.load_from_data((string) message.response_body.flatten().data);
+                                var root = parser.get_root().get_array();
+                                var suggestion_list = root.get_array_element(1).get_elements();
+                                var completion_list = new Gtk.ListStore(1, typeof(string));
+                                Gtk.TreeIter iter;
+                                
+                                foreach (var suggestion in suggestion_list) {
+                                    completion_list.append(out iter);
+                                    completion_list.set(iter, 0, suggestion.get_string());
+                                }
+
+                                address_entry_completion.set_model(completion_list);
+                            } catch (GLib.Error error) {}
+                        });
                     }
-                    web_view.load_uri(uri.to_string(false));
                 }
                 
                 return true;
@@ -67,7 +91,8 @@ namespace Pumpkin {
                 Pumpkin.TabLabel label = (Pumpkin.TabLabel) notebook.get_tab_label(page);
                 title = label.text;
                 icon = label.icon;
-                address_entry.text = web_view.uri == null ? "about:blank" : web_view.uri;
+                address_entry.text = web_view.uri == null ? "" : web_view.uri;
+                address_entry.progress_fraction = web_view.is_loading ? web_view.estimated_load_progress : 0;
             });
 
             web_context = new WebKit.WebContext();
@@ -106,9 +131,42 @@ namespace Pumpkin {
             });
 
             web_view.notify["uri"].connect(() => {
-                if (notebook.page_num(web_view) == notebook.page) {
+                if (notebook.page_num(web_view) == notebook.page && !address_entry.has_focus) {
                     address_entry.text = web_view.uri;
                 }
+            });
+
+            web_view.notify["estimated-load-progress"].connect(() => {
+                if (notebook.page_num(web_view) == notebook.page) {
+                    address_entry.progress_fraction = web_view.estimated_load_progress;
+                }
+            });
+
+            web_view.notify["is-loading"].connect(() => {
+                if (notebook.page_num(web_view) == notebook.page && !web_view.is_loading) {
+                    address_entry.progress_fraction = 0;
+                }
+            });
+
+            web_view.context_menu.connect((context_menu, event, hit_test_result) => {
+                if (hit_test_result.context_is_link()) {
+                    context_menu.remove_all();
+                    var new_tab_menu_item = new WebKit.ContextMenuItem.from_stock_action_with_label(
+                        WebKit.ContextMenuAction.OPEN_LINK_IN_NEW_WINDOW,
+                        "Open in New Tab"
+                    );
+                    context_menu.append(new WebKit.ContextMenuItem.from_stock_action(
+                        WebKit.ContextMenuAction.OPEN_LINK
+                    ));
+                    context_menu.append(new_tab_menu_item);
+                    context_menu.append(new WebKit.ContextMenuItem.from_stock_action(
+                        WebKit.ContextMenuAction.COPY_LINK_TO_CLIPBOARD
+                    ));
+                    context_menu.append(new WebKit.ContextMenuItem.from_stock_action(
+                        WebKit.ContextMenuAction.DOWNLOAD_LINK_TO_DISK
+                    ));
+                }
+                return false;
             });
 
             notebook.append_page(web_view, label);
