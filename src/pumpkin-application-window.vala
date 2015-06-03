@@ -9,6 +9,7 @@ namespace Pumpkin {
         [GtkChild] protected Gtk.Entry address_entry;
         protected Gtk.EntryCompletion address_entry_completion;
         protected WebKit.WebContext web_context;
+        protected WebKit.Settings web_settings;
 
         public ApplicationWindow(Gtk.Application application) {
             GLib.Object(application: application);
@@ -121,6 +122,8 @@ namespace Pumpkin {
 
             web_context = new WebKit.WebContext();
             web_context.set_favicon_database_directory(null);
+            web_settings = new WebKit.Settings();
+            web_settings.enable_smooth_scrolling = true;
 
             create_tab().load_uri("http://google.com");
         }
@@ -138,6 +141,7 @@ namespace Pumpkin {
 
         public WebKit.WebView create_tab() {
             var web_view = new WebKit.WebView.with_context(web_context);
+            web_view.set_settings(web_settings);
 
             var label = new Pumpkin.TabLabel();
 
