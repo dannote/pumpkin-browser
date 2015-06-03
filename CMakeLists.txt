@@ -11,7 +11,7 @@ INCLUDE(ValaPrecompile)
 # Find packages
 FIND_PACKAGE(PkgConfig REQUIRED)
 FIND_PACKAGE(Vala REQUIRED)
-PKG_CHECK_MODULES(DEPS REQUIRED glib-2.0>=2.38 gtk+-3.0 libnotify webkit2gtk-4.0 libsoup-2.4)
+PKG_CHECK_MODULES(DEPS REQUIRED glib-2.0>=2.38 gtk+-3.0 libnotify webkit2gtk-4.0 libsoup-2.4 json-glib-1.0)
 
 # Find resource compiler
 FIND_PROGRAM(GLIB_COMPILE_RESOURCES NAMES glib-compile-resources)
@@ -64,6 +64,7 @@ PACKAGES
     glib-2.0
     webkit2gtk-4.0
     libsoup-2.4
+    json-glib-1.0
 OPTIONS
     --target-glib=2.38
 GRESOURCES
