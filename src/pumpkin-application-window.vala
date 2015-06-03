@@ -5,18 +5,73 @@ namespace Pumpkin {
         protected Gtk.Notebook notebook;
         [GtkChild]
         protected Gtk.Button new_tab_button;
+        [GtkChild]
+        protected Gtk.ToolButton back_button;
+        [GtkChild]
+        protected Gtk.ToolButton forward_button;
+        [GtkChild]
+        protected Gtk.ToolButton reload_button;
+        [GtkChild]
+        protected Gtk.Entry address_entry;
         protected WebKit.WebContext web_context;
 
         public ApplicationWindow(Gtk.Application application) {
             GLib.Object(application: application);
 
-            new_tab_button.clicked.connect(() => create_tab().load_uri("http://google.com"));
-            new_tab_button.show();
+            new_tab_button.clicked.connect(() => {
+                create_tab().load_uri("about:blank");
+                address_entry.grab_focus();
+                address_entry.select_region(0, -1);
+            });
+
+            back_button.clicked.connect(() => {
+                if (notebook.page >= 0) {
+                    WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
+                    web_view.go_back();
+                } 
+            });
+
+            forward_button.clicked.connect(() => {
+                if (notebook.page >= 0) {
+                    WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
+                    web_view.go_forward();
+                } 
+            });
+
+            reload_button.clicked.connect(() => {
+                if (notebook.page >= 0) {
+                    WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
+                    web_view.reload();
+                } 
+            });
+
+            address_entry.key_release_event.connect((event) => {
+                Gdk.EventKey event_key = (Gdk.EventKey) event;
+                if (event_key.keyval == Gdk.Key.Return && notebook.page >= 0) {
+                    WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
+                    var uri = new Soup.URI(address_entry.text);
+                    if (uri == null) {
+                        uri = new Soup.URI(null);
+                        uri.set_scheme("http");
+                        uri.set_host(address_entry.text);
+                        uri.set_path("");
+                    }
+                    web_view.load_uri(uri.to_string(false));
+                }
+                
+                return true;
+            });
+            
+            notebook.switch_page.connect((page) => {
+                WebKit.WebView web_view = (WebKit.WebView) page;
+                Pumpkin.TabLabel label = (Pumpkin.TabLabel) notebook.get_tab_label(page);
+                title = label.text;
+                icon = label.icon;
+                address_entry.text = web_view.uri == null ? "about:blank" : web_view.uri;
+            });
 
             web_context = new WebKit.WebContext();
             web_context.set_favicon_database_directory(null);
-            
-            show_all();
 
             create_tab().load_uri("http://google.com");
         }
@@ -34,16 +89,26 @@ namespace Pumpkin {
                     context.clip_extents(null, null, out width, out height);
                     var pixbuf = Gdk.pixbuf_get_from_surface(favicon, 0, 0, (int) width, (int) height)
                         .scale_simple(ICON_SIZE, ICON_SIZE, Gdk.InterpType.BILINEAR);
-                    set_icon(pixbuf);
-                    label.set_icon(pixbuf);
+                    label.icon = pixbuf;
+                    if (notebook.page_num(web_view) == notebook.page) {
+                        icon = pixbuf;
+                    }
                 }
             });
 
             web_view.create.connect(create_tab);
 
             web_view.notify["title"].connect(() => {
-                title = web_view.title;
-                label.set_text(web_view.title);
+                if (notebook.page_num(web_view) == notebook.page) {
+                    title = web_view.title;
+                }
+                label.text = web_view.title;
+            });
+
+            web_view.notify["uri"].connect(() => {
+                if (notebook.page_num(web_view) == notebook.page) {
+                    address_entry.text = web_view.uri;
+                }
             });
 
             notebook.append_page(web_view, label);
@@ -55,8 +120,8 @@ namespace Pumpkin {
                 web_view.destroy();
             });
 
-            show_all();
-
+            web_view.show();
+            web_view.grab_focus();
             notebook.set_current_page(notebook.page_num(web_view));
 
             return web_view;
