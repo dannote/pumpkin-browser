@@ -42,43 +42,63 @@ namespace Pumpkin {
 
             address_entry_completion = new Gtk.EntryCompletion();
             address_entry_completion.text_column = 0;
+            address_entry_completion.inline_completion = true;
+            address_entry_completion.set_model(new Gtk.ListStore(1, typeof(string)));
+            address_entry_completion.set_match_func((completion, key, iter) => {
+                var suggestion_value = Value(typeof(string));
+                completion.get_model().get_value(iter, completion.text_column, out suggestion_value);
+                var suggestion = suggestion_value.get_string();
+                var key_uri = new Soup.URI(null);
+                key_uri.set_scheme("http");
+                key_uri.set_host(key);
+                key_uri.set_path("");
+                return suggestion.index_of(key) == 0 || suggestion.index_of(key_uri.to_string(false)) == 0;
+            });
             address_entry.completion = address_entry_completion;
 
             address_entry.key_release_event.connect((event) => {
                 Gdk.EventKey event_key = (Gdk.EventKey) event;
                 if (notebook.page >= 0) {
+                    var uri = new Soup.URI(address_entry.text);
+                    
                     if (event_key.keyval == Gdk.Key.Return) {
                         WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
-                        var uri = new Soup.URI(address_entry.text);
-                        if (uri == null) {
-                            uri = new Soup.URI(null);
-                            uri.set_scheme("http");
-                            uri.set_host(address_entry.text);
-                            uri.set_path("");
-                        }
                         web_view.grab_focus();
-                        web_view.load_uri(uri.to_string(false));
+                        web_view.load_uri(uri == null ?
+                            "http://www.google.com/search?q=%s".printf(Soup.URI.encode(address_entry.text, null)) :
+                            uri.to_string(false));
                     } else if(event_key.keyval != Gdk.Key.Up && event_key.keyval != Gdk.Key.Down) {
                         var session = new Soup.Session();
                         var message = new Soup.Message("GET",
                             "http://suggestqueries.google.com/complete/search?client=firefox&q=%s"
                             .printf(Soup.URI.encode(address_entry.text, null)));
                         session.queue_message(message, (session, message) => {
+                            var completion_list = new Gtk.ListStore(1, typeof(string));
+                            Gtk.TreeIter iter;
+                            
                             try {
                                 var parser = new Json.Parser();
                                 parser.load_from_data((string) message.response_body.flatten().data);
                                 var root = parser.get_root().get_array();
                                 var suggestion_list = root.get_array_element(1).get_elements();
-                                var completion_list = new Gtk.ListStore(1, typeof(string));
-                                Gtk.TreeIter iter;
-                                
+
                                 foreach (var suggestion in suggestion_list) {
                                     completion_list.append(out iter);
                                     completion_list.set(iter, 0, suggestion.get_string());
                                 }
-
+                            } catch (GLib.Error error) {
+                            } finally {
+                                if (!/^https?:/.match(address_entry.text)) {
+                                    uri = new Soup.URI(null);
+                                    uri.set_scheme("http");
+                                    uri.set_host(address_entry.text);
+                                    uri.set_path("");
+                                    completion_list.append(out iter);
+                                    completion_list.set(iter, 0, uri.to_string(false));
+                                }
+                                
                                 address_entry_completion.set_model(completion_list);
-                            } catch (GLib.Error error) {}
+                            }
                         });
                     }
                 }
