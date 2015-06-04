@@ -8,6 +8,7 @@ namespace Pumpkin {
         [GtkChild] protected Gtk.ToolButton reload_button;
         [GtkChild] protected Gtk.Entry address_entry;
         protected Gtk.EntryCompletion address_entry_completion;
+        protected Gtk.ListStore address_entry_completion_list;
         protected WebKit.WebContext web_context;
         protected WebKit.Settings web_settings;
 
@@ -41,14 +42,18 @@ namespace Pumpkin {
                 } 
             });
 
+            address_entry_completion_list = new Gtk.ListStore(1, typeof(string));
             address_entry_completion = new Gtk.EntryCompletion();
             address_entry_completion.text_column = 0;
             address_entry_completion.inline_completion = true;
-            address_entry_completion.set_model(new Gtk.ListStore(1, typeof(string)));
+            address_entry_completion.set_model(address_entry_completion_list);
             address_entry_completion.set_match_func((completion, key, iter) => {
                 var suggestion_value = Value(typeof(string));
                 completion.get_model().get_value(iter, completion.text_column, out suggestion_value);
                 var suggestion = suggestion_value.get_string();
+                if (suggestion == null) {
+                    return false;
+                }
                 var key_uri = new Soup.URI(null);
                 key_uri.set_scheme("http");
                 key_uri.set_host(key);
@@ -56,8 +61,12 @@ namespace Pumpkin {
                 return suggestion.index_of(key) == 0 || suggestion.index_of(key_uri.to_string(false)) == 0;
             });
 
-            address_entry_completion.match_selected.connect(() => {
-                open_in_current_tab(address_entry.text);
+            address_entry_completion.match_selected.connect((completion, model, iter) => {
+                var suggestion_value = Value(typeof(string));
+                model.get_value(iter, completion.text_column, out suggestion_value);
+                open_in_current_tab(suggestion_value.get_string());
+                var list_store = (Gtk.ListStore) model;
+                list_store.clear();
                 return true;
             });
 
@@ -67,6 +76,7 @@ namespace Pumpkin {
                 Gdk.EventKey event_key = (Gdk.EventKey) event;
 
                 if (event_key.keyval == Gdk.Key.Return) {
+                    address_entry_completion_list.clear();
                     open_in_current_tab(address_entry.text);
                 } else if(event_key.keyval != Gdk.Key.Up &&
                           event_key.keyval != Gdk.Key.Down) {
@@ -78,8 +88,8 @@ namespace Pumpkin {
                     );
                     session.queue_message(message, (session, message) => {
                         Gtk.TreeIter iter;
-                        var completion_list = new Gtk.ListStore(1, typeof(string));
                         var parser = new Json.Parser();
+                        address_entry_completion_list.clear();
                         
                         try {
                             parser.load_from_data((string) message.response_body.flatten().data);
@@ -87,8 +97,8 @@ namespace Pumpkin {
                             var suggestion_list = root.get_array_element(1).get_elements();
 
                             foreach (var suggestion in suggestion_list) {
-                                completion_list.append(out iter);
-                                completion_list.set(iter, 0, suggestion.get_string());
+                                address_entry_completion_list.append(out iter);
+                                address_entry_completion_list.set(iter, 0, suggestion.get_string());
                             }
                         } catch (GLib.Error error) {
                         } finally {
@@ -97,11 +107,9 @@ namespace Pumpkin {
                                 uri.set_scheme("http");
                                 uri.set_host(address_entry.text);
                                 uri.set_path("");
-                                completion_list.append(out iter);
-                                completion_list.set(iter, 0, uri.to_string(false));
+                                address_entry_completion_list.append(out iter);
+                                address_entry_completion_list.set(iter, 0, uri.to_string(false));
                             }
-                            
-                            address_entry_completion.set_model(completion_list);
                         }
                     });
                 }
