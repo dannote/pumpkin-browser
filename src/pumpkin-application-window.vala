@@ -218,7 +218,7 @@ namespace Pumpkin {
                 return false;
             });
 
-            notebook.append_page(web_view, label);
+            notebook.prepend_page(web_view, label);
             notebook.set_tab_reorderable(web_view, true);
 
             label.close.connect(() => {
