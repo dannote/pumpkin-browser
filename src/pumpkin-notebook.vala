@@ -33,6 +33,7 @@ namespace Pumpkin {
                         context.clip_extents(null, null, out width, out height);
                         label.icon = Gdk.pixbuf_get_from_surface(favicon, 0, 0, (int) width, (int) height)
                             .scale_simple(ICON_SIZE, ICON_SIZE, Gdk.InterpType.BILINEAR);
+                        // TODO: handle NULL pixbuf
                     } else {
                         label.icon = null; //TODO: Load from theme 
                     }
@@ -61,7 +62,7 @@ namespace Pumpkin {
                 if (new_web_view.uri != null) {
                     uri = new_web_view.uri;
                 }
-                progress = new_web_view.estimated_load_progress;
+                progress = new_web_view.is_loading ? new_web_view.estimated_load_progress : 0;
                 can_go_back = new_web_view.can_go_back();
                 can_go_forward = new_web_view.can_go_forward();
             });

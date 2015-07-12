@@ -51,23 +51,27 @@ namespace Pumpkin {
                 back_button.set_sensitive(notebook.can_go_back));
             notebook.notify["can-go-forward"].connect(() =>
                 forward_button.set_sensitive(notebook.can_go_forward));
-            notebook.new_tab_button.clicked.connect(() => create_tab());
+            notebook.new_tab_button.clicked.connect(() => {
+                create_tab();
+                address_entry.grab_focus();
+                address_entry.select_region(0, -1);
+            });
 
             web_context = new WebKit.WebContext();
             web_context.set_favicon_database_directory(null);
             web_settings = new WebKit.Settings();
             web_settings.enable_smooth_scrolling = true;
 
-            create_tab().load_uri("http://google.com");
+            create_tab();
+            address_entry.grab_focus();
         }
 
         public void open_in_current_tab(string text) {
             if (notebook.page >= 0) {
                 WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
                 web_view.grab_focus();
-                web_view.load_uri(Util.Uri.is_valid(text) ?
-                    "http://www.google.com/search?q=%s".printf(Soup.URI.encode(text, null)) :
-                    text);
+                web_view.load_uri(Util.Uri.is_valid(text) ? text :
+                    "http://www.google.com/search?q=%s".printf(Soup.URI.encode(text, null)));
             }
         }
 
