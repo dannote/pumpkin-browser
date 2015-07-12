@@ -59,6 +59,7 @@ namespace Pumpkin {
 
             web_context = new WebKit.WebContext();
             web_context.set_favicon_database_directory(null);
+            web_context.set_cache_model(WebKit.CacheModel.DOCUMENT_BROWSER);
             web_settings = new WebKit.Settings();
             web_settings.enable_smooth_scrolling = true;
 
