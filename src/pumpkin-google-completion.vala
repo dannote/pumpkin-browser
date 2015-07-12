@@ -1,9 +1,15 @@
 namespace Pumpkin {
     public class GoogleCompletion : Gtk.EntryCompletion {
         public GoogleCompletion() {
-            model = new Gtk.ListStore(1, typeof(string));
-            text_column = 0;
+            model = new Gtk.ListStore(2, typeof(string), typeof(string));
+            text_column = 1;
             inline_completion = true;
+
+            var source_renderer = new Gtk.CellRendererText();
+            source_renderer.style = Pango.Style.ITALIC;
+
+            cell_area.pack_end(source_renderer, false);
+            cell_area.add_attribute(source_renderer, "text", 0);
 
             set_match_func((completion, key, iter) => {
                 var suggestion_value = Value(typeof(string));
@@ -73,14 +79,14 @@ namespace Pumpkin {
 
                     foreach (var suggestion in suggestion_list) {
                         model.append(out iter);
-                        model.set(iter, 0, suggestion.get_string());
+                        model.set(iter, 0, "Google", 1, suggestion.get_string());
                     }
                 } catch {
                     GLib.warning("Failed to parse response from Google");
                 } finally {
                     if (!/^https?:/.match(entry.text)) {
                         model.append(out iter);
-                        model.set(iter, 0, Util.Uri.normalize(entry.text));
+                        model.set(iter, 0, "URL", 1, Util.Uri.normalize(entry.text));
                     }
                 }
             });
