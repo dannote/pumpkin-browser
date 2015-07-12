@@ -29,6 +29,7 @@ SET(RESOURCES
     data/pumpkin.gresource.xml
     data/ui/window.ui
     data/ui/tab-label.ui
+    data/ui/notebook.ui
 )
 SET(GRESOURCE ${CMAKE_SOURCE_DIR}/data/pumpkin.gresource.xml)
 SET(RESOURCE_FILE ${PROJECT_BINARY_DIR}/resource.c)
@@ -56,7 +57,10 @@ VALA_PRECOMPILE(VALA_C ${PROJECT_NAME}
     src/pumpkin.vala
     src/pumpkin-application.vala
     src/pumpkin-application-window.vala
+    src/pumpkin-notebook.vala
     src/pumpkin-tab-label.vala
+    src/pumpkin-google-completion.vala
+    src/pumpkin-util.vala
 PACKAGES
     posix
     libnotify

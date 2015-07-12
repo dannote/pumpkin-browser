@@ -17,9 +17,8 @@ namespace Pumpkin {
 
         public signal void close();
 
-        public TabLabel() {
+        construct {
             close_button.clicked.connect(() => close());
-            show_all();
         }
     }
 }
