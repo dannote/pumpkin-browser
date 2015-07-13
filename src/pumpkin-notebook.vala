@@ -36,11 +36,11 @@ namespace Pumpkin {
                         var context = new Cairo.Context(favicon);
                         double width, height;
                         context.clip_extents(null, null, out width, out height);
-                        label.icon = Gdk.pixbuf_get_from_surface(favicon, 0, 0, (int) width, (int) height)
-                            .scale_simple(ICON_SIZE, ICON_SIZE, Gdk.InterpType.BILINEAR);
-                        // TODO: handle NULL pixbuf
+                        label.icon = Gdk.pixbuf_get_from_surface(
+                            favicon, 0, 0, (int) width, (int) height
+                        ).scale_simple(ICON_SIZE, ICON_SIZE, Gdk.InterpType.BILINEAR);
                     } else {
-                        label.icon = null; //TODO: Load from theme 
+                        label.icon = null;
                     }
                 });
             });
