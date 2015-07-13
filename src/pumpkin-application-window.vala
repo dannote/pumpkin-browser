@@ -47,6 +47,16 @@ namespace Pumpkin {
                 address_entry.grab_focus();
                 address_entry.select_region(0, -1);
             });
+            notebook.create_window.connect((page, x, y) => {
+                var new_window = new Pumpkin.ApplicationWindow(application);
+                new_window.show();
+                return new_window.notebook;
+            });
+            notebook.page_removed.connect(() => {
+                if (notebook.get_n_pages() == 0) {
+                    close();
+                }
+            });
 
             web_context = new WebKit.WebContext();
             web_context.set_favicon_database_directory(null);
@@ -54,7 +64,6 @@ namespace Pumpkin {
             web_settings = new WebKit.Settings();
             web_settings.enable_smooth_scrolling = true;
 
-            create_tab(false);
             address_entry.grab_focus();
         }
 
@@ -101,7 +110,6 @@ namespace Pumpkin {
             notebook.set_current_page(neighbor ?
                 notebook.insert_page(web_view, label, notebook.page + 1) :
                 notebook.append_page(web_view, label));
-            notebook.set_tab_reorderable(web_view, true);
 
             web_view.grab_focus();
 

@@ -10,9 +10,14 @@ namespace Pumpkin {
         public double progress { get; private set; }
 
         construct {
+            group_name = "pumpkin";
+
             page_added.connect((notebook, child, page_num) => {
                 var web_view = (WebKit.WebView) child;
                 var label = (Pumpkin.TabLabel) get_tab_label(web_view);
+
+                set_tab_reorderable(web_view, true);
+                set_tab_detachable(web_view, true);
 
                 label.close.connect(() => {
                     this.remove_page(this.page_num(web_view));

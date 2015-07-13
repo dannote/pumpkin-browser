@@ -2,13 +2,13 @@ namespace Pumpkin {
     class Application : Gtk.Application {
         protected ApplicationWindow window;
         
-
         public Application() {
             application_id = "net.dannote.pumpkin";
         }
 
         protected override void activate() {
             window = new ApplicationWindow(this);
+            window.create_tab(false);
             window.present();
         }
 
