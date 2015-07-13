@@ -11,7 +11,7 @@ namespace Pumpkin {
         protected WebKit.Settings web_settings;
 
         public ApplicationWindow(Gtk.Application application) {
-            GLib.Object(application: application);
+            Object(application: application);
 
             icon = notebook.icon;
 

@@ -14,7 +14,7 @@ namespace Pumpkin {
             window.present();
         }
 
-        public override void open(GLib.File[] files, string hint) {
+        public override void open(File[] files, string hint) {
             stdout.printf("Open");
         }
     }
