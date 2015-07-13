@@ -88,6 +88,7 @@ namespace Pumpkin {
                 if (hit_test_result.context_is_link()) {
                     context_menu.remove_all();
                     // TODO: add "Open in New Window" and "Search for"
+                    // TODO: add "Inspect Element"
                     var new_tab_menu_item = new WebKit.ContextMenuItem
                         .from_stock_action_with_label(
                             WebKit.ContextMenuAction.OPEN_LINK_IN_NEW_WINDOW,

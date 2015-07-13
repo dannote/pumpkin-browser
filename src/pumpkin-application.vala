@@ -8,7 +8,8 @@ namespace Pumpkin {
 
         protected override void activate() {
             window = new ApplicationWindow(this);
-            window.create_tab(false);
+            window.create_tab(false).load_uri("data:text/html,");
+            window.address_entry.delete_text(0, -1);
             window.address_entry.grab_focus();
             window.present();
         }
