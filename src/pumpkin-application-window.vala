@@ -13,6 +13,8 @@ namespace Pumpkin {
         public ApplicationWindow(Gtk.Application application) {
             GLib.Object(application: application);
 
+            icon = notebook.icon;
+
             back_button.clicked.connect(notebook.go_back);
             forward_button.clicked.connect(notebook.go_forward);
             reload_button.clicked.connect(notebook.reload);
@@ -86,6 +88,7 @@ namespace Pumpkin {
             web_view.context_menu.connect((context_menu, event, hit_test_result) => {
                 if (hit_test_result.context_is_link()) {
                     context_menu.remove_all();
+                    // TODO: add "Open in New Window" and "Search for"
                     var new_tab_menu_item = new WebKit.ContextMenuItem
                         .from_stock_action_with_label(
                             WebKit.ContextMenuAction.OPEN_LINK_IN_NEW_WINDOW,

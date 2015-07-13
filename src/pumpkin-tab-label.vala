@@ -11,14 +11,22 @@ namespace Pumpkin {
         }
 
         public Gdk.Pixbuf icon {
-            get { return image.get_pixbuf(); }
-            set { image.set_from_pixbuf(value.scale_simple(ICON_SIZE, ICON_SIZE, Gdk.InterpType.BILINEAR)); }
+            get {
+                return image.get_pixbuf();
+            }
+            set {
+                image.set_from_pixbuf(value == null ?
+                    Gtk.IconTheme.get_default().load_icon("gtk-file",
+                            ICON_SIZE, Gtk.IconLookupFlags.USE_BUILTIN) :
+                    value.scale_simple(ICON_SIZE, ICON_SIZE, Gdk.InterpType.BILINEAR));
+            }
         }
 
         public signal void close();
 
         construct {
             close_button.clicked.connect(() => close());
+            icon = null;
         }
     }
 }
