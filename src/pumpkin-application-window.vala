@@ -27,19 +27,10 @@ namespace Pumpkin {
                 return true;
             });
             address_entry.completion = address_entry_completion;
-            address_entry.key_release_event.connect((event) => {
-                Gdk.EventKey event_key = (Gdk.EventKey) event;
-
-                if (event_key.keyval == Gdk.Key.Return) {
-                    address_entry_completion.clear_model();
-                    open_in_current_tab(address_entry.text);
-                } else if(event_key.keyval != Gdk.Key.Up &&
-                          event_key.keyval != Gdk.Key.Down) {
-                    
-                    address_entry_completion.load_model();
-                }
-                
-                return true;
+            address_entry.changed.connect(address_entry_completion.load_model);
+            address_entry.activate.connect(() => {
+                address_entry_completion.clear_model();
+                open_in_current_tab(address_entry.text);
             });
 
             notebook.notify["icon"].connect(() => icon = notebook.icon);
