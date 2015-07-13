@@ -79,11 +79,13 @@ namespace Pumpkin {
         }
 
         protected void update_uri() {
-            var new_uri = ((WebKit.WebView) get_nth_page(page)).uri;
+            var web_view = (WebKit.WebView) get_nth_page(page);
             
-            if (new_uri != null) {
-                uri =  new_uri;
+            if (web_view.uri != null) {
+                uri =  web_view.uri;
             }
+            can_go_back = web_view.can_go_back();
+            can_go_forward = web_view.can_go_forward();
         }
 
         protected void update_progress() {
