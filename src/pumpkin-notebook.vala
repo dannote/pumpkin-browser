@@ -10,9 +10,14 @@ namespace Pumpkin {
         public double progress { get; private set; }
 
         construct {
+            group_name = "pumpkin";
+
             page_added.connect((notebook, child, page_num) => {
                 var web_view = (WebKit.WebView) child;
                 var label = (Pumpkin.TabLabel) get_tab_label(web_view);
+
+                set_tab_reorderable(web_view, true);
+                set_tab_detachable(web_view, true);
 
                 label.close.connect(() => {
                     this.remove_page(this.page_num(web_view));
@@ -79,11 +84,13 @@ namespace Pumpkin {
         }
 
         protected void update_uri() {
-            var new_uri = ((WebKit.WebView) get_nth_page(page)).uri;
+            var web_view = (WebKit.WebView) get_nth_page(page);
             
-            if (new_uri != null) {
-                uri =  new_uri;
+            if (web_view.uri != null) {
+                uri =  web_view.uri;
             }
+            can_go_back = web_view.can_go_back();
+            can_go_forward = web_view.can_go_forward();
         }
 
         protected void update_progress() {

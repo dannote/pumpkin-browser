@@ -84,7 +84,7 @@ namespace Pumpkin {
                 } catch {
                     GLib.warning("Failed to parse response from Google");
                 } finally {
-                    if (!/^https?:/.match(entry.text)) {
+                    if (!/^https?:/.match(entry.text)) { //TODO: optional DNS resolution
                         model.append(out iter);
                         model.set(iter, 0, "URL", 1, Util.Uri.normalize(entry.text));
                     }

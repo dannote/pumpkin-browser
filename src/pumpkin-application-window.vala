@@ -27,19 +27,10 @@ namespace Pumpkin {
                 return true;
             });
             address_entry.completion = address_entry_completion;
-            address_entry.key_release_event.connect((event) => {
-                Gdk.EventKey event_key = (Gdk.EventKey) event;
-
-                if (event_key.keyval == Gdk.Key.Return) {
-                    address_entry_completion.clear_model();
-                    open_in_current_tab(address_entry.text);
-                } else if(event_key.keyval != Gdk.Key.Up &&
-                          event_key.keyval != Gdk.Key.Down) {
-                    
-                    address_entry_completion.load_model();
-                }
-                
-                return true;
+            address_entry.changed.connect(address_entry_completion.load_model);
+            address_entry.activate.connect(() => {
+                address_entry_completion.clear_model();
+                open_in_current_tab(address_entry.text);
             });
 
             notebook.notify["icon"].connect(() => icon = notebook.icon);
@@ -52,9 +43,19 @@ namespace Pumpkin {
             notebook.notify["can-go-forward"].connect(() =>
                 forward_button.set_sensitive(notebook.can_go_forward));
             notebook.new_tab_button.clicked.connect(() => {
-                create_tab();
+                create_tab(false);
                 address_entry.grab_focus();
                 address_entry.select_region(0, -1);
+            });
+            notebook.create_window.connect((page, x, y) => {
+                var new_window = new Pumpkin.ApplicationWindow(application);
+                new_window.show();
+                return new_window.notebook;
+            });
+            notebook.page_removed.connect(() => {
+                if (notebook.get_n_pages() == 0) {
+                    close();
+                }
             });
 
             web_context = new WebKit.WebContext();
@@ -63,7 +64,6 @@ namespace Pumpkin {
             web_settings = new WebKit.Settings();
             web_settings.enable_smooth_scrolling = true;
 
-            create_tab();
             address_entry.grab_focus();
         }
 
@@ -76,13 +76,13 @@ namespace Pumpkin {
             }
         }
 
-        public WebKit.WebView create_tab() {
+        public WebKit.WebView create_tab(bool neighbor = true) {
             var web_view = new WebKit.WebView.with_context(web_context);
             web_view.set_settings(web_settings);
 
             var label = new Pumpkin.TabLabel();
 
-            web_view.create.connect(create_tab);
+            web_view.create.connect(() => create_tab());
             web_view.context_menu.connect((context_menu, event, hit_test_result) => {
                 if (hit_test_result.context_is_link()) {
                     context_menu.remove_all();
@@ -107,8 +107,9 @@ namespace Pumpkin {
 
             web_view.show();
 
-            notebook.set_current_page(notebook.append_page(web_view, label));
-            notebook.set_tab_reorderable(web_view, true);
+            notebook.set_current_page(neighbor ?
+                notebook.insert_page(web_view, label, notebook.page + 1) :
+                notebook.append_page(web_view, label));
 
             web_view.grab_focus();
 
