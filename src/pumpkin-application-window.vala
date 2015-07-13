@@ -5,7 +5,7 @@ namespace Pumpkin {
         [GtkChild] protected Gtk.ToolButton back_button;
         [GtkChild] protected Gtk.ToolButton forward_button;
         [GtkChild] protected Gtk.ToolButton reload_button;
-        [GtkChild] protected Gtk.Entry address_entry;
+        [GtkChild] public Gtk.Entry address_entry;
         protected Pumpkin.GoogleCompletion address_entry_completion;
         protected WebKit.WebContext web_context;
         protected WebKit.Settings web_settings;
@@ -65,8 +65,6 @@ namespace Pumpkin {
             web_context.set_cache_model(WebKit.CacheModel.DOCUMENT_BROWSER);
             web_settings = new WebKit.Settings();
             web_settings.enable_smooth_scrolling = true;
-
-            address_entry.grab_focus();
         }
 
         public void open_in_current_tab(string text) {
