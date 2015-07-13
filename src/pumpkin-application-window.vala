@@ -65,6 +65,7 @@ namespace Pumpkin {
             web_context.set_cache_model(WebKit.CacheModel.DOCUMENT_BROWSER);
             web_settings = new WebKit.Settings();
             web_settings.enable_smooth_scrolling = true;
+            web_settings.enable_developer_extras = true;
         }
 
         public void open_in_current_tab(string text) {
