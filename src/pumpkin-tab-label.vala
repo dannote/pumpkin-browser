@@ -2,7 +2,7 @@ namespace Pumpkin {
     [GtkTemplate(ui = "/net/dannote/pumpkin/ui/tab-label.ui")]
     class TabLabel : Gtk.Box {
         [GtkChild] public Gtk.Image image;
-        [GtkChild] protected Gtk.Label caption;
+        [GtkChild] protected Gtk.Label caption; //TODO: tip on mouseover
         [GtkChild] protected Gtk.Button close_button;
 
         public string text {
