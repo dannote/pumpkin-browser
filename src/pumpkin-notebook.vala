@@ -25,6 +25,7 @@ namespace Pumpkin {
                     web_view.destroy();
                 });
 
+                //TODO: probably move to custom WebView class 
                 web_view.notify["title"].connect(() => {
                     if (web_view.title != null) {
                         label.text = web_view.title;
@@ -47,6 +48,7 @@ namespace Pumpkin {
 
             switch_page.connect((new_page) => {
                 if (page >= 0) {
+                    //TODO: move as private method to ApplicationWindow.
                     var old_page = get_nth_page(page);
                     var old_label = (Pumpkin.TabLabel) get_tab_label(old_page);
                     old_label.notify["text"].disconnect(update_title);

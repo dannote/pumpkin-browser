@@ -60,6 +60,7 @@ namespace Pumpkin {
                 }
             });
 
+            // TODO: move to custom classes and to application
             web_context = new WebKit.WebContext();
             web_context.set_favicon_database_directory(null);
             web_context.set_cache_model(WebKit.CacheModel.DOCUMENT_BROWSER);
@@ -78,6 +79,7 @@ namespace Pumpkin {
         }
 
         public WebKit.WebView create_tab(bool neighbor = true) {
+            // TODO: create Tab interface and add separate class
             var web_view = new WebKit.WebView.with_context(web_context);
             web_view.set_settings(web_settings);
 
