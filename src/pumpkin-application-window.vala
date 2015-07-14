@@ -24,7 +24,7 @@ namespace Pumpkin {
                 var completion = (Pumpkin.GoogleCompletion) entry_completion;
                 var suggestion_value = Value(typeof(string));
                 model.get_value(iter, completion.text_column, out suggestion_value);
-                open_in_current_tab(suggestion_value.get_string());
+                open_in_current_page(suggestion_value.get_string());
                 completion.clear_model();
                 return true;
             });
@@ -32,7 +32,7 @@ namespace Pumpkin {
             address_entry.changed.connect(address_entry_completion.load_model);
             address_entry.activate.connect(() => {
                 address_entry_completion.clear_model();
-                open_in_current_tab(address_entry.text);
+                open_in_current_page(address_entry.text);
             });
 
             notebook.notify["icon"].connect(() => icon = notebook.icon);
@@ -44,8 +44,8 @@ namespace Pumpkin {
                 back_button.set_sensitive(notebook.can_go_back));
             notebook.notify["can-go-forward"].connect(() =>
                 forward_button.set_sensitive(notebook.can_go_forward));
-            notebook.new_tab_button.clicked.connect(() => {
-                create_tab(false);
+            notebook.new_page_button.clicked.connect(() => {
+                create_page(false);
                 address_entry.grab_focus();
                 address_entry.select_region(0, -1);
             });
@@ -59,24 +59,9 @@ namespace Pumpkin {
                     close();
                 }
             });
-
-            // TODO: move to custom classes and to application
-            var data_path = Path.build_path(Path.DIR_SEPARATOR_S, Environment.get_user_data_dir(),
-                "pumpkin");
-            DirUtils.create_with_parents(data_path, 0700);
-            var db_path = Path.build_path(data_path, "browser.db");
-            
-            web_context = new WebKit.WebContext();
-            web_context.set_favicon_database_directory(null);
-            web_context.set_cache_model(WebKit.CacheModel.DOCUMENT_BROWSER);
-            web_context.get_cookie_manager().set_persistent_storage(db_path,
-                WebKit.CookiePersistentStorage.SQLITE);
-            web_settings = new WebKit.Settings();
-            web_settings.enable_smooth_scrolling = true;
-            web_settings.enable_developer_extras = true;
         }
 
-        public void open_in_current_tab(string text) {
+        public void open_in_current_page(string text) {
             if (notebook.page >= 0) {
                 WebKit.WebView web_view = (WebKit.WebView) notebook.get_nth_page(notebook.page);
                 web_view.grab_focus();
@@ -85,20 +70,21 @@ namespace Pumpkin {
             }
         }
 
-        public WebKit.WebView create_tab(bool neighbor = true) {
-            // TODO: create Tab interface and add separate class
-            var web_view = new WebKit.WebView.with_context(web_context);
-            web_view.set_settings(web_settings);
+        public Pumpkin.WebPage get_current_page() {
+            return (Pumpkin.WebPage) notebook.get_nth_page(notebook.page);
+        }
 
-            var label = new Pumpkin.TabLabel();
+        public Pumpkin.WebPage create_page(bool neighbor = true) {
+            // TODO: make application getters and setters
+            var web_page = new Pumpkin.WebPage((Pumpkin.Application) application);
 
-            web_view.create.connect(() => create_tab());
-            web_view.context_menu.connect((context_menu, event, hit_test_result) => {
+            web_page.create.connect(() => create_page());
+            web_page.context_menu.connect((context_menu, event, hit_test_result) => {
                 if (hit_test_result.context_is_link()) {
                     context_menu.remove_all();
                     // TODO: add "Open in New Window" and "Search for"
                     // TODO: add "Inspect Element"
-                    var new_tab_menu_item = new WebKit.ContextMenuItem
+                    var new_page_menu_item = new WebKit.ContextMenuItem
                         .from_stock_action_with_label(
                             WebKit.ContextMenuAction.OPEN_LINK_IN_NEW_WINDOW,
                             "Open in New Tab"
@@ -106,7 +92,7 @@ namespace Pumpkin {
                     context_menu.append(new WebKit.ContextMenuItem.from_stock_action(
                         WebKit.ContextMenuAction.OPEN_LINK
                     ));
-                    context_menu.append(new_tab_menu_item);
+                    context_menu.append(new_page_menu_item);
                     context_menu.append(new WebKit.ContextMenuItem.from_stock_action(
                         WebKit.ContextMenuAction.COPY_LINK_TO_CLIPBOARD
                     ));
@@ -117,15 +103,15 @@ namespace Pumpkin {
                 return false;
             });
 
-            web_view.show();
+            web_page.show();
 
             notebook.set_current_page(neighbor ?
-                notebook.insert_page(web_view, label, notebook.page + 1) :
-                notebook.append_page(web_view, label));
+                notebook.insert_page(web_page, notebook.page + 1) :
+                notebook.append_page(web_page));
 
-            web_view.grab_focus();
+            web_page.grab_focus();
 
-            return web_view;
+            return web_page;
         }
     }
 }
