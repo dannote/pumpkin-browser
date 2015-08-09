@@ -15,12 +15,12 @@ namespace Pumpkin {
         }
         
         public Application() {
-            Object(application_id: "net.dannote.pumpkin");
+            Object(application_id: "net.dannote.pumpkin", flags: ApplicationFlags.HANDLES_OPEN);
             
             _data_path = Path.build_path(Path.DIR_SEPARATOR_S, Environment.get_user_data_dir(),
                 "pumpkin");
             DirUtils.create_with_parents(data_path, 0700);
-            _database_path = Path.build_path(data_path, "browser.db");
+            _database_path = Path.build_filename(data_path, "browser.db");
 
             web_context = new WebKit.WebContext();
             web_context.set_favicon_database_directory(null);
@@ -30,18 +30,24 @@ namespace Pumpkin {
             web_settings = new WebKit.Settings();
             web_settings.enable_smooth_scrolling = true;
             web_settings.enable_developer_extras = true;
+
+            startup.connect(() => {
+                window = new ApplicationWindow(this);
+            });
+
+            open.connect((files, hint) => {
+                foreach (var file in files) {
+                    window.create_page(false).load_uri(file.get_uri());
+                }
+                window.present();
+            });
         }
 
         protected override void activate() {
-            window = new ApplicationWindow(this);
             window.create_page(false).load_html("", null);
             window.address_entry.grab_focus();
             window.address_entry.select_region(0, -1);
             window.present();
-        }
-
-        public override void open(File[] files, string hint) {
-            stdout.printf("Open");
         }
     }
 }
