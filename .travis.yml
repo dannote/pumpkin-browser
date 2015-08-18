@@ -1,17 +1,19 @@
 language: c
 compiler: gcc
 before_install:
-  - sudo apt-get -qq update
-  - sudo apt-get -qq -y upgrade
+  - sudo apt-get update -qq
+  - DEBIAN_FRONTEND=noninteractive sudo apt-get upgrade -q -y
+      -o "Dpkg::Options::=--force-confdef"
+      -o "Dpkg::Options::=--force-confold"
   - sudo apt-get install update-manager-core software-properties-common
   - sudo sed -i 's/^\(Prompt=\).*/\1lts/' /etc/update-manager/release-upgrades
   - sudo do-release-upgrade -f DistUpgradeViewNonInteractive
   - sudo add-apt-repository ppa:vala-team/ppa -y
   - sudo add-apt-repository ppa:webkit-team/ppa -y
-  - sudo apt-get -qq update
-  - sudo apt-get -qq install gnome-common libglib2.0-dev libgtk-3-dev
+  - sudo apt-get update -qq
+  - sudo apt-get install gnome-common libglib2.0-dev libgtk-3-dev
       libvala-0.26-dev valac-0.26 gobject-introspection libwebkit2gtk-4.0-dev
-      libnotify-dev libjson-glib-dev libsoup2.4-dev
+      libnotify-dev libjson-glib-dev libsoup2.4-dev -qq
 script:
   - mkdir build
   - cd build
