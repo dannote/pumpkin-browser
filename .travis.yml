@@ -1,13 +1,7 @@
 language: c
 compiler: gcc
+dist: trusty
 before_install:
-  - sudo apt-get update -qq
-  - DEBIAN_FRONTEND=noninteractive sudo apt-get dist-upgrade -qq -y
-      -o "Dpkg::Options::=--force-confdef"
-      -o "Dpkg::Options::=--force-confold"
-  - sudo apt-get install update-manager-core software-properties-common
-  - sudo sed -i 's/^\(Prompt=\).*/\1lts/' /etc/update-manager/release-upgrades
-  - DEBIAN_FRONTEND=noninteractive sudo do-release-upgrade -f DistUpgradeViewNonInteractive
   - sudo add-apt-repository ppa:vala-team/ppa -y
   - sudo add-apt-repository ppa:webkit-team/ppa -y
   - sudo apt-get update -qq
