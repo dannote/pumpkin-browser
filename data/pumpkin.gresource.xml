@@ -2,7 +2,7 @@
 <gresources>
     <gresource prefix="/net/dannote/pumpkin/">
         <file preprocess="xml-stripblanks">ui/window.ui</file>
-        <file preprocess="xml-stripblanks">ui/tab-label.ui</file>
+        <file preprocess="xml-stripblanks">ui/page-label.ui</file>
         <file preprocess="xml-stripblanks">ui/notebook.ui</file>
     </gresource>
 </gresources>

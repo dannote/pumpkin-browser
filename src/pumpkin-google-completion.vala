@@ -82,7 +82,7 @@ namespace Pumpkin {
                         model.set(iter, 0, "Google", 1, suggestion.get_string());
                     }
                 } catch {
-                    GLib.warning("Failed to parse response from Google");
+                    warning("Failed to parse response from Google");
                 } finally {
                     if (!/^https?:/.match(entry.text)) { //TODO: optional DNS resolution
                         model.append(out iter);
